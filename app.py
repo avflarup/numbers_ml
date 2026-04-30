@@ -2,7 +2,7 @@ import torch
 import gradio as gr
 from torchvision import transforms
 from models.model import NeuralNetwork
-from PIL import Image
+from PIL import Image, ImageOps
 import numpy as np
 
 device = torch.device("cpu")
@@ -40,9 +40,31 @@ def dict_to_pil(data):
 
     return image
 
-def predict(data):
-    image = dict_to_pil(data)  # convert Sketchpad dict → PIL
+def preprocess(image):
+    # Convert dict/numpy → PIL if needed
+    image = dict_to_pil(image)
+
+    # Convert to grayscale (strips alpha channel if RGBA)
+    image = image.convert("L")
+
+    # Invert colors for MNIST (white-on-black)
+    image = ImageOps.invert(image)
+
+    # Crop to content
+    bbox = image.getbbox()
+    if bbox:
+        image = image.crop(bbox)
+
+    # Resize to 28x28 using LANCZOS (high quality)
+    image = image.resize((28, 28), Image.Resampling.LANCZOS)
+
+    # Apply torchvision transform
     image = transform(image).unsqueeze(0)
+
+    return image
+
+def predict(data):
+    image = preprocess(data)
 
     with torch.no_grad():
         output = model(image)
