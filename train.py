@@ -67,8 +67,8 @@ epochs = 5
 
 for t in range(epochs):
     print(f"Epoch {t+1}")
-    train(train_dataloader, model, loss_fn, optimizer, device)
-    test(test_dataloader, model, loss_fn, device)
+    train(train_dataloader, model, loss_fn, optimizer)
+    test(test_dataloader, model, loss_fn)
 
 torch.save(model.state_dict(), "models/mnist_model.pth")
 print("Done!")
